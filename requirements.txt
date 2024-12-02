@@ -1,0 +1,11 @@
+annotated-types==0.7.0
+anyio==4.6.2.post1
+beautifulsoup4==4.12.3
+bs4==0.0.2
+cloudscraper==1.2.71
+fake-useragent==1.5.1
+fastapi==0.115.2
+python-dotenv==1.0.1
+requests==2.32.3
+ujson==5.10.0
+uvicorn==0.32.0
