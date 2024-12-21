@@ -1,36 +1,56 @@
-from fastapi.responses import HTMLResponse, UJSONResponse
+from fastapi import FastAPI, APIRouter, HTTPException
+from pydantic import BaseModel
 from mediaFire import Media
-from fastapi import FastAPI, Request
+from json import loads
+from dotenv import load_dotenv
+from os import environ
 
-app = FastAPI()
+load_dotenv()
+
+CONTACTS = environ['CONTACTS']
+
+app = FastAPI(
+    title='MediaFire',
+    description='This REST API receives the media ID and returns the download URL.',
+    redoc_url='/',
+    contact=loads(CONTACTS),
+)
+
 media = Media()
 
-@app.get('/')
-async def index():
-    return HTMLResponse(content='Hello, world!', status_code=200)
+class ApiRequest(BaseModel):
+    id: str
 
-@app.get('/get')
-async def home(request: Request):
-    id = request.query_params.get('id')
+class ApiSuccess(BaseModel):
+    name: str
+    link: str
 
-    if not id:
-        data = {'status': False, 'message': 'id parameter is required'}
-        return UJSONResponse(content=data, status_code=400)
+class ApiError(BaseModel):
+    message: str
 
-    trans = await media.init(id)
-    if trans['status']:
-        return UJSONResponse(content=trans, status_code=200)
-    return UJSONResponse(content=trans, status_code=404)
+api_router = APIRouter(prefix="/api")
+
+@api_router.post(
+    '/media',
+    responses={
+        200: {"description": "Success", "model": ApiSuccess},
+        404: {"description": "ID not found", "model": ApiError},
+        400: {"description": "ID parameter not found", "model": ApiError},
+    }
+)
+async def get_url(data: ApiRequest):
+    if not data.id:
+        raise HTTPException(status_code=400, detail="ID parameter is required")
+
+    trans = await media.init(data.id)
+
+    if trans.get('status'):
+        return ApiSuccess(name=trans['message']['name'], link=trans['message']['link'])
+    
+    raise HTTPException(status_code=404, detail=trans.get('message', 'Unknown error'))
+
+app.include_router(api_router)
 
 if __name__ == '__main__':
-    import uvicorn
-    config = uvicorn.Config(
-        app="app:app",
-        host="0.0.0.0",
-        port=8000,
-        workers=4,
-        log_level="warning"
-    )
-
-    server = uvicorn.Server(config)
-    server.run()
+    from uvicorn import run
+    run(app="app:app", host="0.0.0.0", port=8000, log_level='warning')
