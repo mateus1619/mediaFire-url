@@ -42,20 +42,36 @@ class Media:
 
     async def getLink(self, url: str) -> dict:
         resp = await self._send_request(url)
-        if resp['status']:
-            try:
-                soup = self.BeautifulSoup(resp['message'], 'html.parser')
-                link = soup.find(class_='popsok').get('href')
-                name = soup.find(class_='promoDownloadName').getText(strip=True)
+
+        # Se a requisição não for bem-sucedida, retorna o erro diretamente
+        if not resp['status']:
+            return resp
+
+        try:
+            soup = BeautifulSoup(resp['message'], 'html.parser')
+        
+            # Verificando se os elementos existem antes de tentar acessá-los
+            link_element = soup.find(class_='popsok')
+            name_element = soup.find(class_='promoDownloadName')
+        
+            if link_element and name_element:
+                link = link_element.get('href')
+                name = name_element.get_text(strip=True)
                 resp['message'] = {'name': name, 'link': link}
-            except AttributeError:
+            else:
                 resp['status'] = False
                 resp['message'] = None
-                resp['details'] = f'Invalid id'
-            except Exception as e:
-                resp['status'] = False
-                resp['details'] = f'{e}'
-            return resp
+                resp['details'] = 'Required elements not found'
+        
+        except AttributeError:
+            resp['status'] = False
+            resp['message'] = None
+            resp['details'] = 'Invalid ID or unexpected HTML structure'
+    
+        except Exception as e:
+            resp['status'] = False
+            resp['details'] = f'An unexpected error occurred: {str(e)}'
+
         return resp
 
     async def init(self, file_id: str) -> dict:
