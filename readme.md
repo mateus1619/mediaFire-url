@@ -17,9 +17,8 @@ This link takes you directly to the documentation interface, where you can see d
 ## API Reference
 
 #### Base URL
-```http
-mediafire-url.vercel.app
-```
+
+[`mediafire-url.vercel.app`](https://mediafire-url.vercel.app)
 
 #### Endpoint: Get URL
 
