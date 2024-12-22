@@ -45,10 +45,12 @@ POST /api/media
 
 #### Request Example
 
-```curl
-curl -X POST https://mediafire-url.vercel.app/api/media
--H "Content-Type: application/json"
--d '{"id": "ol9s654lvkuyc1o"}'
+```bash
+curl \
+  -H "Content-Type: application/json" \
+  -X POST \
+  -d '{"id": "ol9s654lvkuyc1o"}' \
+  https://mediafire-url.vercel.app/api/media
 ```
 
 #### Exemplo de Resposta
